@@ -36,7 +36,7 @@ let pieceSpawnCenter = {
 	"J" : -1,
 	"S" : -1,
 	"Z" : -1,
-	"I" : -2
+	"I" : -1
 };
 
 pieces = {
@@ -243,17 +243,6 @@ function draw() {
     	}
     }
   }
-  //Rendering ghost piece
- /*for (i = 0; i < pieces[currentPiece].length; i++) {
-  	for (j = 0; j < pieces[currentPiece][0].length; j++) {
-  		if (pieces[currentPiece][i][j] !== 0) {
-  			ctx.drawImage(ghost,
-  				(ghostX * blockWidth) + (j * blockWidth),
-  				(ghostY * blockHeight) + (i * blockHeight),
-  				blockWidth, blockHeight);
-  		}
-  	}
-  }*/
   //Rendering dropping piece
   for (i = 0; i < pieces[currentPiece].length; i++) {
     for (j = 0; j < pieces[currentPiece][0].length; j++) {
@@ -373,11 +362,12 @@ function dropPiece() {
 		clearLines();
 		pieces[currentPiece] = originalRotation;
 		currentPiece = nextPiece;
+		nextPiece = pickRandomPiece();
 		while (nextPiece === currentPiece)
 			nextPiece = pickRandomPiece();
 		originalRotation = pieces[currentPiece];
 		Y = 0;
-		X = 4;
+		X = Math.floor((levelWidth/2)) + pieceSpawnCenter[currentPiece];
 	}
 	if (collision() === "withBottom") {
 		merge();
@@ -385,11 +375,12 @@ function dropPiece() {
 		clearLines();
 		pieces[currentPiece] = originalRotation;
 		currentPiece = nextPiece;
+		nextPiece = pickRandomPiece();
 		while (nextPiece === currentPiece)
 			nextPiece = pickRandomPiece();
 		originalRotation = pieces[currentPiece];
 		Y = 0;
-		X = 4;
+		X = Math.floor((levelWidth/2)) + pieceSpawnCenter[currentPiece];
 	}
 	canRotate = true;
 };
@@ -492,7 +483,6 @@ function update(timestamp) {
   //if (timestamp - timeStart >= 500) {
   if (gameTimer >= gameSpeed) {
   dropPiece();
-  //ghostPiece()
   draw();
   gameTimer = 0;
   timeStart = timestamp;
