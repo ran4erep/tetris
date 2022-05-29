@@ -188,6 +188,9 @@ c.addEventListener("touchend", function(e) {
 		swipeDuration=0;
 	} else if (swipeDuration <= 1 && canRotate) {
 		//Regular touch
+		if (!rotationCollision(
+						rotate(pieces[currentPiece]))
+			)
 		pieces[currentPiece] = rotate(pieces[currentPiece]);
 		if(pieceIsOutOfBounds() === "left")
 			X += 1
