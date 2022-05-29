@@ -96,6 +96,7 @@ let blockWidth = c.width / levelWidth;
 let blockHeight = c.height / levelHeight;
 
 let currentPiece = pickRandomPiece();
+let originalRotation = pieces[currentPiece];
 let nextPiece = pickRandomPiece();
 let X = Math.floor((levelWidth/2)) + pieceSpawnCenter[currentPiece], Y = 0;
 let ghostX = X, ghostY = levelHeight - pieces[currentPiece].length;
@@ -370,8 +371,11 @@ function dropPiece() {
 		merge();
 		hardDrop = false;
 		clearLines();
+		pieces[currentPiece] = originalRotation;
 		currentPiece = nextPiece;
-		nextPiece = pickRandomPiece();
+		while (nextPiece === currentPiece)
+			nextPiece = pickRandomPiece();
+		originalRotation = pieces[currentPiece];
 		Y = 0;
 		X = 4;
 	}
@@ -379,8 +383,11 @@ function dropPiece() {
 		merge();
 		hardDrop = false;
 		clearLines();
+		pieces[currentPiece] = originalRotation;
 		currentPiece = nextPiece;
-		nextPiece = pickRandomPiece();
+		while (nextPiece === currentPiece)
+			nextPiece = pickRandomPiece();
+		originalRotation = pieces[currentPiece];
 		Y = 0;
 		X = 4;
 	}
@@ -476,10 +483,12 @@ let currentSpeed = 40;
 //60 max, 28 levels
 function update(timestamp) {
 	scoreText.innerHTML = `Score: ${score}  Level: ${level}<br>Current Piece: ${currentPiece}  Next piece: ${nextPiece}`;
+	
 	if (hardDrop)
 		gameSpeed = 1;
 	else gameSpeed = currentSpeed;
 	gameTimer++;
+	
   //if (timestamp - timeStart >= 500) {
   if (gameTimer >= gameSpeed) {
   dropPiece();
