@@ -81,6 +81,7 @@ pieces = {
 let c = document.getElementById("canvas");
 let ctx = c.getContext("2d");
 let debug = document.getElementById("debug");
+let scoreText = document.getElementById("scoreText");
 //Scaler
 let gameScale = 2;
 c.width = c.width * gameScale;
@@ -99,6 +100,8 @@ let nextPiece = pickRandomPiece();
 let X = Math.floor((levelWidth/2)) + pieceSpawnCenter[currentPiece], Y = 0;
 let ghostX = X, ghostY = levelHeight - pieces[currentPiece].length;
 let canRotate = true;
+let hardDrop = false;
+let score = 0;
 
 //Arena creation
 let arena = [];
@@ -157,6 +160,7 @@ c.addEventListener("touchmove", function(e) {
 });
 c.addEventListener("touchend", function(e) {
 	e.preventDefault();
+	if (!hardDrop) {
 	if (swipeEndX < swipeStartX-20 && swipeDuration> 1) {
 		X -= 1;
 		ghostX -= 1;
@@ -184,17 +188,11 @@ c.addEventListener("touchend", function(e) {
 			};
 			swipeDuration = 0;
 			draw();
-		/*
-		if (X < levelWidth - pieces[currentPiece][0].length && !rightCollision()) {
-			X += 1;
-			ghostX += 1;
-			swipeDuration = 0;
-		}*/
-	}/* else if (swipeEndY < swipeStartY - 20 && swipeDuration > 1) {
+	} else if (swipeEndY < swipeStartY - 20 && swipeDuration > 1) {
 		//Swipe up
-		Y = 20-pieces[currentPiece].length;
+		hardDrop = true;
 		swipeDuration=0;
-	}*/
+	}
 	else if (swipeEndY > swipeStartY + 20 && swipeDuration > 1) {
 		//Swipe down
 		//dropPiece();
@@ -217,7 +215,9 @@ c.addEventListener("touchend", function(e) {
 		draw();
 		swipeDuration = 0;
 	}
-});
+}
+}
+);
 
 //Functions
 function draw() {
@@ -360,6 +360,7 @@ function dropPiece() {
 	if(collision() === "withPiece") {
 		Y -= 1;
 		merge();
+		hardDrop = false;
 		clearLines();
 		currentPiece = nextPiece;
 		nextPiece = pickRandomPiece();
@@ -368,6 +369,7 @@ function dropPiece() {
 	}
 	if (collision() === "withBottom") {
 		merge();
+		hardDrop = false;
 		clearLines();
 		currentPiece = nextPiece;
 		nextPiece = pickRandomPiece();
@@ -426,6 +428,7 @@ function clearLines() {
 		}
 	}
 	
+	
 	for (let index of lines) {
 		arena.splice(index,1);
 		arena.unshift(new Array(levelWidth).fill(0));
@@ -435,15 +438,23 @@ function clearLines() {
 		if(arena[levelHeight-1][x] === 0)
 			arena[levelHeight-1][x] = 2;
 	}
+	if (lines.length > 0 && lines.length < 4) {
+		score += 100*lines.length;
+	} else score += 200*lines.length;
 };
 draw();
 //Main game loop
 let timeStart = 0;
 let gameTimer = 0;
+let gameSpeed = 30;
 function update(timestamp) {
+	scoreText.innerHTML = score;
+	if (hardDrop)
+		gameSpeed = 1;
+	else gameSpeed = 30;
 	gameTimer++;
   //if (timestamp - timeStart >= 500) {
-  if (gameTimer >= 30) {
+  if (gameTimer >= gameSpeed) {
   dropPiece();
   //ghostPiece()
   draw();
