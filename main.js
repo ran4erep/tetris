@@ -113,9 +113,26 @@ for (column = 0; column < levelHeight; column++) {
 };
 
 ///Controls
-buttonLeft.addEventListener("click", function(e) {
-  if (X > 0)
-	 X -= 1;
+buttonT.addEventListener("click", function(e) {
+  currentPiece = "T";
+});
+buttonO.addEventListener("click", function(e) {
+	currentPiece = "O";
+});
+buttonL.addEventListener("click", function(e) {
+	currentPiece = "L";
+});
+buttonJ.addEventListener("click", function(e) {
+	currentPiece = "J";
+});
+buttonS.addEventListener("click", function(e) {
+	currentPiece = "S";
+});
+buttonZ.addEventListener("click", function(e) {
+	currentPiece = "Z";
+});
+buttonI.addEventListener("click", function(e) {
+	currentPiece = "I";
 });
 
 buttonRight.addEventListener("click", function(e) {
@@ -143,7 +160,7 @@ c.addEventListener("touchend", function(e) {
 	if (swipeEndX < swipeStartX-20 && swipeDuration> 1) {
 		X -= 1;
 		ghostX -= 1;
-		if (pieceIsOutOfBounds() === "left") {
+		if (pieceIsOutOfBounds(pieces[currentPiece]) === "left") {
 			X += 1;
 			ghostX += 1;
 		}
@@ -157,7 +174,7 @@ c.addEventListener("touchend", function(e) {
 		//Swipe right
 			X += 1;
 			ghostX += 1;
-			if (pieceIsOutOfBounds() === "right") {
+			if (pieceIsOutOfBounds(pieces[currentPiece]) === "right") {
 				X -= 1;
 				ghostX -= 1;
 			}
@@ -188,14 +205,15 @@ c.addEventListener("touchend", function(e) {
 		swipeDuration=0;
 	} else if (swipeDuration <= 1 && canRotate) {
 		//Regular touch
-		if (!rotationCollision(
-						rotate(pieces[currentPiece]))
-			)
-		pieces[currentPiece] = rotate(pieces[currentPiece]);
-		if(pieceIsOutOfBounds() === "left")
-			X += 1
-		if(pieceIsOutOfBounds() === "right")
+		let buffer = rotate(pieces[currentPiece]);
+		while(pieceIsOutOfBounds(buffer) === "left") {
+			X+= 1;
+		}
+		while (pieceIsOutOfBounds(buffer) === "right") {
 			X -= 1;
+		}
+		if (!rotationCollision(buffer) )
+			pieces[currentPiece] = buffer;
 		draw();
 		swipeDuration = 0;
 	}
@@ -308,16 +326,15 @@ function collision() {
 	}
 };
 
-function pieceIsOutOfBounds() {
+function pieceIsOutOfBounds(buffer) {
 	let middle = levelWidth/2;
 	
 	if (X < middle) {
-		for (i = 0; i < pieces[currentPiece].length; i++) {
-			for (j = 0; j < pieces[currentPiece][0].length; j++) {
-				if (pieces[currentPiece][i][j] === 1) {
+		for (i = 0; i < buffer.length; i++) {
+			for (j = 0; j < buffer[0].length; j++) {
+				if (buffer[i][j] === 1) {
 					if(arena[Y+i][X+j] === undefined) {
 						return "left";
-						console.log("collision occured");
 					} //else return false;
 				}
 			}
@@ -325,12 +342,11 @@ function pieceIsOutOfBounds() {
 	}
 	
 	if (X > middle) {
-		for (i = 0; i < pieces[currentPiece].length; i++) {
-			for (j = 0; j < pieces[currentPiece][0].length; j++) {
-				if (pieces[currentPiece][i][j] === 1) {
+		for (i = 0; i < buffer.length; i++) {
+			for (j = 0; j < buffer[0].length; j++) {
+				if (buffer[i][j] === 1) {
 					if (X+j === levelWidth) {
 						return "right";
-						console.log("collision occured");
 					} //else return false;
 				}
 			}
