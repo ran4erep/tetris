@@ -98,7 +98,7 @@ let currentPiece = pickRandomPiece();
 let nextPiece = pickRandomPiece();
 let X = Math.floor((levelWidth/2)) + pieceSpawnCenter[currentPiece], Y = 0;
 let ghostX = X, ghostY = levelHeight - pieces[currentPiece].length;
-console.log(ghostY)
+let canRotate = true;
 
 //Arena creation
 let arena = [];
@@ -141,26 +141,32 @@ c.addEventListener("touchmove", function(e) {
 c.addEventListener("touchend", function(e) {
 	e.preventDefault();
 	if (swipeEndX < swipeStartX-20 && swipeDuration> 1) {
-		if (!pieceIsOutOfBounds()) {
-			X -= 1;
-			ghostX -= 1;
-			if (collision() === "withPiece") {
-				X += 1
-				ghostX += 1;
-			};
-			swipeDuration = 0;
-		}
-	} else if(swipeEndX > swipeStartX+20 && swipeDuration > 1) {
-		//Swipe right
-		if (!pieceIsOutOfBounds()) {
+		X -= 1;
+		ghostX -= 1;
+		if (pieceIsOutOfBounds() === "left") {
 			X += 1;
 			ghostX += 1;
+		}
+		if (collision() === "withPiece") {
+			X += 1
+			ghostX += 1;
+		};
+		swipeDuration = 0;
+		draw();
+	} else if(swipeEndX > swipeStartX+20 && swipeDuration > 1) {
+		//Swipe right
+			X += 1;
+			ghostX += 1;
+			if (pieceIsOutOfBounds() === "right") {
+				X -= 1;
+				ghostX -= 1;
+			}
 			if(collision() === "withPiece") {
 				X -= 1
 				ghostX -= 1;
 			};
 			swipeDuration = 0;
-		}
+			draw();
 		/*
 		if (X < levelWidth - pieces[currentPiece][0].length && !rightCollision()) {
 			X += 1;
@@ -174,11 +180,19 @@ c.addEventListener("touchend", function(e) {
 	}*/
 	else if (swipeEndY > swipeStartY + 20 && swipeDuration > 1) {
 		//Swipe down
+		//dropPiece();
 		dropPiece();
+		gameTimer = 0;
+		draw();
 		//timeStart = 0;
 		swipeDuration=0;
-	} else if (swipeDuration <= 1) {
+	} else if (swipeDuration <= 1 && canRotate) {
+		//Regular touch
 		pieces[currentPiece] = rotate(pieces[currentPiece]);
+		if(pieceIsOutOfBounds() === "left")
+			X += 1
+		if(pieceIsOutOfBounds() === "right")
+			X -= 1;
 		draw();
 		swipeDuration = 0;
 	}
@@ -264,6 +278,18 @@ function merge() {
   }*/
 };
 
+function rotationCollision(buffer) {
+	for (i = 0; i < buffer.length; i++) {
+		for (j = 0; j < buffer[0].length; j++) {
+			if (buffer[i][j] === 1) {
+				if (arena[Y + i][(X + j)] === 1) {
+					return true;
+				}
+			}
+		}
+	}
+};
+
 function collision() {
 	for (i = 0; i < pieces[currentPiece].length; i++) {
 		for (j = 0; j < pieces[currentPiece][0].length; j++) {
@@ -280,19 +306,37 @@ function collision() {
 };
 
 function pieceIsOutOfBounds() {
-	for (i = 0; i < pieces[currentPiece].length; i++) {
-		for (j = 0; j < pieces[currentPiece][0].length; j++) {
-			if (pieces[currentPiece][i][j] === 1) {
-				if(arena[Y+i][(X+j)+1] === undefined) {
-					break;
-					return true;
-				} else return false;
+	let middle = levelWidth/2;
+	
+	if (X < middle) {
+		for (i = 0; i < pieces[currentPiece].length; i++) {
+			for (j = 0; j < pieces[currentPiece][0].length; j++) {
+				if (pieces[currentPiece][i][j] === 1) {
+					if(arena[Y+i][X+j] === undefined) {
+						return "left";
+						console.log("collision occured");
+					} //else return false;
+				}
+			}
+		}
+	}
+	
+	if (X > middle) {
+		for (i = 0; i < pieces[currentPiece].length; i++) {
+			for (j = 0; j < pieces[currentPiece][0].length; j++) {
+				if (pieces[currentPiece][i][j] === 1) {
+					if (X+j === levelWidth) {
+						return "right";
+						console.log("collision occured");
+					} //else return false;
+				}
 			}
 		}
 	}
 };
 
 function dropPiece() {
+	carRotate = false;
 	Y += 1;
 	if(collision() === "withPiece") {
 		Y -= 1;
@@ -301,6 +345,7 @@ function dropPiece() {
 		currentPiece = nextPiece;
 		nextPiece = pickRandomPiece();
 		Y = 0;
+		X = 4;
 	}
 	if (collision() === "withBottom") {
 		merge();
@@ -308,8 +353,9 @@ function dropPiece() {
 		currentPiece = nextPiece;
 		nextPiece = pickRandomPiece();
 		Y = 0;
-		X = 5;
+		X = 4;
 	}
+	canRotate = true;
 };
 
 function ghostPiece() {
@@ -371,17 +417,18 @@ function clearLines() {
 			arena[levelHeight-1][x] = 2;
 	}
 };
-
+draw();
 //Main game loop
-let timeStart = 0;	
+let timeStart = 0;
+let gameTimer = 0;
 function update(timestamp) {
-  if (timestamp - timeStart >= 500) {
-    
-   //draw();
+	gameTimer++;
+  //if (timestamp - timeStart >= 500) {
+  if (gameTimer >= 30) {
   dropPiece();
-  //checkRow();
   //ghostPiece()
   draw();
+  gameTimer = 0;
   timeStart = timestamp;
   }
   requestAnimationFrame(update);
