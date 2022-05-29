@@ -11,13 +11,14 @@
 	 	 2). Повороты фигур ✅
 	   3). Управление свайпами  ✅
 	   4). Функции для софтдропа  ✅
-	 	 5). Функция для харддропа
+	 	 5). Функция для харддропа ✅
 	   6). Коллизия по бокам фигуры ✅
-		 7). Начисление очков
-		 8). Увеличение сложности по ходу игры
-		 9). Стирание нижних рядов при заполнении
+		 7). Начисление очков ✅
+		 8). Увеличение сложности по ходу игры ✅
+		 9). Стирание нижних рядов при заполнении ✅
 		 10). Доделать обесцвечивание закрепившихся блоков ✅
-		 11). Сделать ghost pieces
+		 11). Сделать ghost pieces ❌
+		 12). Сделать Game Over
  */
  
 //Graphics
@@ -41,9 +42,10 @@ let pieceSpawnCenter = {
 
 pieces = {
   "T" : [
-  		[0,0,0],
+  		
       [1,1,1],
-      [0,1,0]
+      [0,1,0],
+      [0,0,0]
     ],
   "O": [
         [1, 1],
@@ -60,14 +62,14 @@ pieces = {
         [1, 1, 0]
       ],
   "S": [
-  			[0, 0, 0],
         [0, 1, 1],
-        [1, 1, 0]
+        [1, 1, 0],
+        [0, 0, 0]
       ],
   "Z": [
-  			[0, 0, 0],
         [1, 1, 0],
-        [0, 1, 1]
+        [0, 1, 1],
+        [0, 0, 0]
       ],
   "I": [
         [0,1,0,0],
@@ -84,10 +86,10 @@ let debug = document.getElementById("debug");
 let scoreText = document.getElementById("scoreText");
 //Scaler
 let gameScale = 2;
-c.width = c.width * gameScale;
-c.height = c.height * gameScale;
-//c.width = window.innerWidth - 20;
-//c.height = window.innerHeight -80;
+//c.width = c.width * gameScale;
+//c.height = c.height * gameScale;
+c.width = window.innerWidth - 20;
+c.height = window.innerHeight -80;
 ctx.imageSmoothingEnabled = false;
 //Dimensions
 let levelWidth = 10;
@@ -122,33 +124,7 @@ for (column = 0; column < levelHeight; column++) {
 };
 
 ///Controls
-buttonT.addEventListener("click", function(e) {
-  currentPiece = "T";
-});
-buttonO.addEventListener("click", function(e) {
-	currentPiece = "O";
-});
-buttonL.addEventListener("click", function(e) {
-	currentPiece = "L";
-});
-buttonJ.addEventListener("click", function(e) {
-	currentPiece = "J";
-});
-buttonS.addEventListener("click", function(e) {
-	currentPiece = "S";
-});
-buttonZ.addEventListener("click", function(e) {
-	currentPiece = "Z";
-});
-buttonI.addEventListener("click", function(e) {
-	currentPiece = "I";
-});
 
-buttonRight.addEventListener("click", function(e) {
-	if (X < levelWidth - pieces[currentPiece][0].length)
-  	X += 1;
-});
-//Swipes
 let swipeStartX = 0;
 let swipeStartY = 0;
 let swipeEndX = 0;
@@ -166,7 +142,7 @@ c.addEventListener("touchmove", function(e) {
 });
 c.addEventListener("touchend", function(e) {
 	e.preventDefault();
-	if (!hardDrop) {
+	if (!hardDrop && !isGameOver()) {
 	if (swipeEndX < swipeStartX-20 && swipeDuration> 1) {
 		X -= 1;
 		ghostX -= 1;
@@ -279,20 +255,6 @@ function merge() {
 			}
 		}
 	}
-	/*
-  for (x = 0; x < levelWidth; x++) {
-    for (y = 0; y < levelHeight; y++) {
-      if (x === X && y === Y) {
-        for (i = 0; i < pieces[currentPiece][0].length; i++) {
-          for (j = 0; j < pieces[currentPiece].length; j++) {
-          	if(arena[y + j][x + i] === 0 ||
-          		arena[y+j][x+i] === 2)
-            arena[y + j][x + i] = pieces[currentPiece][j][i];
-          }
-        }
-      }
-    }
-  }*/
 };
 
 function rotationCollision(buffer) {
@@ -331,7 +293,7 @@ function pieceIsOutOfBounds(buffer) {
 				if (buffer[i][j] === 1) {
 					if(arena[Y+i][X+j] === undefined) {
 						return "left";
-					} //else return false;
+					}
 				}
 			}
 		}
@@ -343,7 +305,19 @@ function pieceIsOutOfBounds(buffer) {
 				if (buffer[i][j] === 1) {
 					if (X+j === levelWidth) {
 						return "right";
-					} //else return false;
+					}
+				}
+			}
+		}
+	}
+};
+
+function isGameOver() {
+	for (i = 0; i < pieces[currentPiece].length; i++) {
+		for (j = 0; j < pieces[currentPiece][0].length; j++) {
+			if (pieces[currentPiece][i][j] === 1) {
+				if (arena[0][X + j] === 1) {
+					return true;
 				}
 			}
 		}
@@ -351,7 +325,9 @@ function pieceIsOutOfBounds(buffer) {
 };
 
 function dropPiece() {
-	carRotate = false;
+	canRotate = false;
+	if (isGameOver())
+		console.log("GAME OVER");
 	Y += 1;
 	if (hardDrop)
 		score += 2;
@@ -473,21 +449,23 @@ let gameSpeed = 40;
 let currentSpeed = 40;
 //60 max, 28 levels
 function update(timestamp) {
-	scoreText.innerHTML = `Score: ${score}  Level: ${level}<br>Current Piece: ${currentPiece}  Next piece: ${nextPiece}`;
-	
-	if (hardDrop)
-		gameSpeed = 1;
-	else gameSpeed = currentSpeed;
-	gameTimer++;
-	
-  //if (timestamp - timeStart >= 500) {
-  if (gameTimer >= gameSpeed) {
-  dropPiece();
-  draw();
-  gameTimer = 0;
-  timeStart = timestamp;
-  }
-  requestAnimationFrame(update);
+	if (!isGameOver()) {
+		scoreText.innerHTML = `Score: ${score}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Level: ${level}<br>Current Piece: ${currentPiece}<br>Next piece: ${nextPiece}`;
+		
+		if (hardDrop)
+			gameSpeed = 1;
+		else gameSpeed = currentSpeed;
+		gameTimer++;
+		
+	  //if (timestamp - timeStart >= 500) {
+	  if (gameTimer >= gameSpeed) {
+	  dropPiece();
+	  draw();
+	  gameTimer = 0;
+	  timeStart = timestamp;
+	  }
+	  requestAnimationFrame(update);
+	}
 };
 
 update();
