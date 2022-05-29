@@ -102,6 +102,11 @@ let ghostX = X, ghostY = levelHeight - pieces[currentPiece].length;
 let canRotate = true;
 let hardDrop = false;
 let score = 0;
+let level = 1;
+let linesForLevelUp = 10;
+let maximumLevel = 28;
+let maximumSpeed = 40;
+let linesTotal = 0;
 
 //Arena creation
 let arena = [];
@@ -197,6 +202,7 @@ c.addEventListener("touchend", function(e) {
 		//Swipe down
 		//dropPiece();
 		dropPiece();
+		score += 1;
 		gameTimer = 0;
 		draw();
 		//timeStart = 0;
@@ -357,6 +363,8 @@ function pieceIsOutOfBounds(buffer) {
 function dropPiece() {
 	carRotate = false;
 	Y += 1;
+	if (hardDrop)
+		score += 2;
 	if(collision() === "withPiece") {
 		Y -= 1;
 		merge();
@@ -438,20 +446,39 @@ function clearLines() {
 		if(arena[levelHeight-1][x] === 0)
 			arena[levelHeight-1][x] = 2;
 	}
-	if (lines.length > 0 && lines.length < 4) {
-		score += 100*lines.length;
-	} else score += 200*lines.length;
+	
+	for (let index of lines) {
+		linesTotal += 1;
+	}
+	if ((linesTotal > 0 && linesTotal % linesForLevelUp === 0) || linesTotal > linesForLevelUp) {
+		level += 1;
+		linesTotal -= linesForLevelUp;
+		currentSpeed = currentSpeed - (maximumSpeed / maximumLevel);
+	}
+	console.log(`Lines cleared: ${linesTotal} :: Current level: ${level} :: Current speed: ${currentSpeed}`)
+	
+	if (lines.length === 1) {
+		score = score + (100*level);
+	} else if(lines.length === 2) {
+		score = score + (300*level);
+	} else if(lines.length === 3) {
+		score = score + (500*level);
+	} else if(lines.length === 4) {
+		score = score + (800*level);
+	}
 };
 draw();
 //Main game loop
 let timeStart = 0;
 let gameTimer = 0;
-let gameSpeed = 30;
+let gameSpeed = 40;
+let currentSpeed = 40;
+//60 max, 28 levels
 function update(timestamp) {
-	scoreText.innerHTML = score;
+	scoreText.innerHTML = `Score: ${score}  Level: ${level}<br>Current Piece: ${currentPiece}  Next piece: ${nextPiece}`;
 	if (hardDrop)
 		gameSpeed = 1;
-	else gameSpeed = 30;
+	else gameSpeed = currentSpeed;
 	gameTimer++;
   //if (timestamp - timeStart >= 500) {
   if (gameTimer >= gameSpeed) {
